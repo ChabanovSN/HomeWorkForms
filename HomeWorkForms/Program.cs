@@ -19,105 +19,103 @@ namespace HomeWorkForms
 
     }
         public class Form2 : Form{
-        List<Rectangle> list;
-        List<Color> colors;
-        int x1, x2, y1, y2;
-        SolidBrush myBrush = new SolidBrush(Color.Red);
-        Random random = new Random();
+
+        Label label;
 
         public Form2(){
-            list = new List<Rectangle>();
-            colors = new List<Color>();          
                 MinimumSize = new Size(600, 600);
                 StartPosition = FormStartPosition.CenterScreen;
-                ResizeRedraw = true;         
+                ResizeRedraw = true;
+            label = new Label
+            {
+                Location = new Point(300,300),
+                Text= $"Поймай меня",
+                Width =100,
+                Height = 20
+            };
+
+            Controls.Add(label);
+        }
+
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            int lblLeft = label.Left;
+            int lblTop = label.Top;
+            int xL = label.Location.X;
+            int yL = label.Location.Y;
+            int xE = e.Location.X;
+            int yE = e.Location.Y;
+
+            Console.WriteLine($" left l{xL}  - e{xE} = {xL - xE} y l{ yL}  -e{ yE} = { yL - yE}");
+          //  Console.WriteLine($" right {xE - xL} y { yE - yL}");
+            if (xL - xE < 10 && xL - xE >= -15 && yL - yE < 5) /// to right
+            {
+               
+                lblLeft += 10;
               
-               
-        }
-
-        protected override void OnMouseDoubleClick(MouseEventArgs e)
-        {
-            // base.OnMouseDoubleClick(e);
-            if (e.Button == MouseButtons.Left)
-            {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    if (list[i].Contains(e.Location))
-                    {
-                        list.RemoveAt(i);
-                        colors.RemoveAt(i);
-                        Invalidate();
-                        break;
-                    }
-
-                }
             }
-        }
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-           if (e.Button == MouseButtons.Left)
+            else if (xL - xE < 5 && yL - yE < 10 && yL - yE >= 10) // to top
             {
-               x1 = e.Location.X;
-               y1 = e.Location.Y;               
+
+                lblTop -= 10;
             }
-                    
-        }
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
+            else if (xL - xE < 10 && xL - xE >= -15 && yL - yE < 10 && yL - yE >=-10) // to right and to buttom
             {
-                x2 = e.Location.X;
-                y2 = e.Location.Y;
-               
-                if (x2 - x1 < 10 && y1 - y2 < 10 )
-                {
 
-                     if (x2 != x1)
-                    MessageBox.Show("Объект должен буть минимум 10 Х 10");
-                }
-                else
-                {
-
-                    if (x2 !=x1 && y1 != y2){
-                    list.Add(new Rectangle(x1, y1, x2 - x1, y2 - y1));
-                    colors.Add(Color.FromArgb(random.Next(0, 255),
-                              random.Next(0, 255), random.Next(0, 255)));
-                    x1 = x2 = y1 = y2 = 0;
-                    Invalidate();
-                    }
-                }
-
+                lblLeft += 10;
+                lblTop += 10;
             }
-            if (e.Button == MouseButtons.Right)
+            //////////////////////////////////////////
+
+            if (xE - xL-100 <10 && xE - xL-100 >= -15 && yL - yE < 5) /// to left
             {
                
-                for (int i = list.Count - 1; i >= 0; i--)
+                lblLeft -= 10;
+
+            }
+            else if (xL - xE < 5 && yL - yE < 10 && yL - yE >= -10) // to buttom
+            {
+               
+              lblTop += 10;
+            }
+           
+
+            /////////
+            if (lblLeft + label.Width > Width) // right side
                 {
-                    if (list[i].Contains(e.Location))
-                    {
-                      double sq =  (double)list[i].Width * list[i].Height / 1000;
-             Text = $"( x1={list[i].Left} y1={list[i].Top}; x2={list[i].Right} y2={list[i].Bottom}) площадь= {sq} кв.см";
-                        break;
-                    }
+                    lblLeft -= 20;
+                    lblTop += 20;
                 }
+                if (lblTop + label.Height > Height-10) // buttom side
+                {
+
+                    lblTop -= 60;
+                    lblLeft -= 50;
+               
+                }
+
+            if (lblLeft + label.Width <= 100) // right side
+            {
+                lblLeft = 120;
+                lblTop = 20;
+            }
+            if (lblTop + label.Height <  10) // buttom side
+            {
+
+                lblTop = 220;
+                lblLeft = 120;
 
             }
 
+
+
+            label.Location = new Point(lblLeft, lblTop);
+              //  Update();
+            
+           // Console.WriteLine( $" btn{lblLeft} : {  lblTop} form {Width} : {Height}");
         }
-      
-       
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
 
-            Graphics g = e.Graphics;               
-                for (int i = 0; i < list.Count; i++)
-                {
-                    myBrush.Color = colors[i];
-                    g.FillRectangle(myBrush, list[i]);
-                }
 
-          }
 
     }
 
