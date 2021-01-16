@@ -22,15 +22,23 @@ namespace HomeWorkForms
     }
     public class Form2 : Form
     {
-
+        private double daySum = 0;
+        Timer myTimer = new Timer();
+        bool newClient = false;
         public Form2()
         {
+            myTimer.Interval = 10000;
             Init();
-        }
+                
 
+        }
+        private static void TimerEventProcessor(Object myObject,EventArgs myEventArgs)
+        {
+
+        }
         private void Init() {
             Font = new Font(Font.Name, 10.0F);
-
+            Text = "Best Oil";
 
             Size size = new Size(605, 600);
             ClientSize = size;
@@ -225,22 +233,12 @@ namespace HomeWorkForms
             };
             TextBox textHotDogKol = new TextBox
             {
-
+                Name = "Kol1",
                 Enabled = false,
                 Location = new Point(190, 70),
                 Width = 85
             };
-            checkBoxHotDog.CheckedChanged += (s,e) => {
-                if (checkBoxHotDog.Checked)                
-                    textHotDogKol.Enabled = true;
-                else
-                {
-                    textHotDogKol.Enabled =false;
-                    textHotDogKol.Text = "";
-                }
-               
-
-            };
+           
 
             CheckBox checkBoxHumberg = new CheckBox
             {
@@ -256,20 +254,12 @@ namespace HomeWorkForms
             };
             TextBox textHumbergKol = new TextBox
             {
-
+                Name = "Kol2",
                 Enabled = false,
                 Location = new Point(190, 100),
                 Width = 85
             };
-            checkBoxHumberg.CheckedChanged += (s, e) => {
-                if (checkBoxHumberg.Checked)
-                    textHumbergKol.Enabled = true;
-                else
-                {
-                    textHumbergKol.Enabled = false;
-                    textHumbergKol.Text = "";
-                }
-            };
+
 
             CheckBox checkBoxPatetto = new CheckBox
             {
@@ -285,20 +275,12 @@ namespace HomeWorkForms
             };
             TextBox textPatettoKol = new TextBox
             {
-
+                Name = "Kol3",
                 Enabled = false,
                 Location = new Point(190, 130),
                 Width = 85
             };
-            checkBoxPatetto.CheckedChanged += (s, e) => {
-                if (checkBoxPatetto.Checked)
-                    textPatettoKol.Enabled = true;
-                else
-                {
-                    textPatettoKol.Enabled = false;
-                    textPatettoKol.Text = "";
-                }
-            };
+
 
 
             CheckBox checkBoxKola = new CheckBox
@@ -315,20 +297,12 @@ namespace HomeWorkForms
             };
             TextBox textKolaKol = new TextBox
             {
-
+                Name = "Kol4",
                 Enabled = false,
                 Location = new Point(190, 160),
                 Width = 85
             };
-            checkBoxKola.CheckedChanged += (s, e) => {
-                if (checkBoxKola.Checked)
-                    textKolaKol.Enabled = true;
-                else
-                {
-                    textKolaKol.Enabled = false;
-                    textKolaKol.Text = "";
-                }
-            };
+           
 
 
             Label labelSumFood = new Label
@@ -349,24 +323,7 @@ namespace HomeWorkForms
                 Text = "К оплате"
             };
 
-            textHotDogKol.KeyUp += (object sender, KeyEventArgs e) =>
-            {
-                if (e.KeyCode == Keys.Enter)
-                {
-                    try
-                    {
-                       int.TryParse(textHotDogKol.Text, out int kol);
-                        double sum = kol * priceFood[0];
-                        double.TryParse(labelSumFood.Text, out double totalSum);
-                        labelSumFood.Text = (totalSum+ sum).ToString("0.##");
-                        
-                    }
-                    catch
-                    {
-                        MessageBox.Show("Ошибка формата ввода");
-                    }
-                }
-            };
+           
 
 
             groupAllSumFood.Controls.AddRange(new Control[] { labelSumFood , labelRub4 });
@@ -377,6 +334,79 @@ namespace HomeWorkForms
                 Location = new Point(308, 20),
                 Size = new Size(280, 340)
             };
+            checkBoxHotDog.CheckedChanged += (s, e) => {
+                if (checkBoxHotDog.Checked)
+                    textHotDogKol.Enabled = true;
+                else
+                {
+                    textHotDogKol.Enabled = false;
+                    textHotDogKol.Text = "";
+                }
+
+                labelSumFood.Text = countSumFood(groupCofe, priceFood);
+            };
+            textHotDogKol.KeyUp += (object sender, KeyEventArgs e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    labelSumFood.Text = countSumFood(groupCofe, priceFood);
+                }
+            };
+
+        
+           
+
+            checkBoxHumberg.CheckedChanged += (s, e) => {
+                if (checkBoxHumberg.Checked)
+                    textHumbergKol.Enabled = true;
+                else
+                {
+                    textHumbergKol.Enabled = false;
+                    textHumbergKol.Text = "";
+                }
+                labelSumFood.Text = countSumFood(groupCofe, priceFood);
+            };
+            textHumbergKol.KeyUp += (object sender, KeyEventArgs e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    labelSumFood.Text = countSumFood(groupCofe, priceFood);
+                }
+            };
+            checkBoxPatetto.CheckedChanged += (s, e) => {
+                if (checkBoxPatetto.Checked)
+                    textPatettoKol.Enabled = true;
+                else
+                {
+                    textPatettoKol.Enabled = false;
+                    textPatettoKol.Text = "";
+                }
+                labelSumFood.Text = countSumFood(groupCofe, priceFood);
+            };
+            textPatettoKol.KeyUp += (object sender, KeyEventArgs e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    labelSumFood.Text = countSumFood(groupCofe, priceFood);
+                }
+            };
+            checkBoxKola.CheckedChanged += (s, e) => {
+                if (checkBoxKola.Checked)
+                    textKolaKol.Enabled = true;
+                else
+                {
+                    textKolaKol.Enabled = false;
+                    textKolaKol.Text = "";
+                }
+                labelSumFood.Text = countSumFood(groupCofe, priceFood);
+            };
+            textKolaKol.KeyUp += (object sender, KeyEventArgs e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    labelSumFood.Text = countSumFood(groupCofe, priceFood);
+                }
+            };
             groupCofe.Controls.AddRange(new Control[] {labelPriceFood,labelKolFood,
                 checkBoxHotDog,textHotDogPrice,textHotDogKol,
                     checkBoxHumberg,textHumbergPrice,textHumbergKol,
@@ -384,14 +414,95 @@ namespace HomeWorkForms
                             checkBoxKola,textKolaPrice,textKolaKol,groupAllSumFood });
 
             ///////COMMON/////
+            /// 
+            Button OilFoodSumBtn = new Button {
+
+                Text = "ВСЕГО",
+                Location = new Point(110,30),             
+                Size = new Size(120,50)
+                 };
+        
+            Label labelSumAll = new Label
+            {
+                Font = new Font(Font.Name, 16.0F),
+                Location = new Point(300, 90)
+            };
+            Label labelRub5 = new Label
+            {
+                Text = "руб.",
+                Location = new Point(400, 100),
+                Width = 40
+            };
+            OilFoodSumBtn.Click += (s, e) => {
+
+                double.TryParse(labelSumOIl.Text, out double oil);
+                double.TryParse(labelSumFood.Text, out double food);
+                labelSumAll.Text = (oil + food).ToString("0.##");
+                daySum += oil + food;
+                Text = $"Best Oil. Выручка за день = {daySum} руб.";
+                newClient = true;
+                myTimer.Start();
+                
+            };
             GroupBox groupCommon = new GroupBox
             {
                 Text = "Всего к оплате",
                 Location = new Point(10, 380),
                 Size = new Size(580, 150)
             };
+            groupCommon.Controls.AddRange(new Control[] { OilFoodSumBtn, labelSumAll, labelRub5 });
             //
             Controls.AddRange(new Control[] { groupOil,groupCofe,groupCommon });
+            myTimer.Tick += (s, e) => {
+                if (newClient)
+                {
+                    myTimer.Stop();
+                    if (MessageBox.Show("Новый клиент?", "Обновить форму ",
+                       MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        myTimer.Enabled = true;
+                        checkBoxKola.Checked =
+                        checkBoxHotDog.Checked =
+                        checkBoxHumberg.Checked =
+                        checkBoxPatetto.Checked = false;
+                        comboBoxOil.SelectedIndex = 1;
+                        textLiters.Text = textLiters.Text 
+                        =labelSumAll.Text= labelSumOIl.Text = "";
+                        newClient = false;
+                    }
+                    else
+                    {
+                        myTimer.Start();
+                    }
+
+                }
+            };
+        }
+
+        private string countSumFood(GroupBox groupBox, double[] prices) {
+
+            TextBox[] texts = groupBox.Controls.OfType<TextBox>()
+            .Where(e => e.Name.StartsWith("Kol", StringComparison.Ordinal))
+                .ToArray();
+            double totalSum = 0;
+            for (int i = 0; i <prices.Length; i++)
+            {
+                try
+                {
+                  int kol=0;
+                    if (texts[i].Text.Length > 0)
+                        int.TryParse(texts[i].Text, out  kol);                   
+                    double sum = kol * prices[i];
+                    totalSum += sum;                 
+
+                }
+                catch
+                {
+                    MessageBox.Show("Ошибка формата ввода");
+                }
+            }
+
+            return totalSum.ToString("0.##");
 
         }
 
