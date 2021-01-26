@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Data.SqlClient;
 using System.Data;
 using System.Configuration;
+using System.Drawing.Text;
 
 namespace HomeWorkForms
 {
@@ -25,264 +26,197 @@ namespace HomeWorkForms
     }
     public class Form2 : Form
     {
-        private SqlConnection conn = null;
-        SqlDataAdapter da = null;
-        DataSet set = null;
-        //SqlCommandBuilder cmd = null;
-        string cs = "";
-        bool Auth = false;
-        private DataGridView dataGridView1;
-        private Button fillBtn, updateBtn;
-        private GroupBox groupBox;
-        private RadioButton showRbtn, editRbtn;
-        private ComboBox comboBox;
-
+        RichTextBox richTextBox1;
+        float fontSize = 12;
         public Form2()
         {
-            cs = ConfigurationManager.ConnectionStrings["diary"].ConnectionString;
+            //  FontDialog dialog = new FontDialog();
+            //  if (dialog.ShowDialog() != DialogResult.Cancel) { }
+
             Init();
-        }
-
-        void FillBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                conn = new SqlConnection(cs);
-                set = new DataSet();               
-               
-                string where = " ";
-                 if ( comboBox.SelectedIndex != -1)
-                    where = $"where sb.Name='{comboBox.Items[comboBox.SelectedIndex]}'";
-                string select = "select sb.Name as Subject ,s.FirstName,s.LastName,l.Estimate as Estimate,l.[Date] " +
-                    " from lessons as l " +
-                    " JOIN Students as s ON s.Id = l.Student " +
-                    " JOIN Subjects as sb ON sb.Id = l.Subject" +
-                    $" {where} ;" +
-                    "\n select Name from Subjects;" +
-                    "\n select FirstName, LastName from Students;";
-
-
-
-                da = new SqlDataAdapter(select, conn);
-               
-
-                if (Auth)
-                {
-                    da.UpdateCommand = UpdateCmd();
-                    da.DeleteCommand = DeleteCmd();
-                    da.InsertCommand = InsetCmd();
-                }
-                dataGridView1.DataSource = null;
-                da.TableMappings.Add("Table", "diary");
-                da.TableMappings.Add("Table1", "subjects");            
-                da.Fill(set);
-                dataGridView1.DataSource = set.Tables["diary"];
-              
-                PrintValues(set.Tables["subjects"]);
-              
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-            finally
-            {
-            }
-        }
-        private void PrintValues(DataTable table)
-        {
-            comboBox.Items.Clear();
-            foreach (DataRow row in table.Rows)
-            {
-                foreach (DataColumn column in table.Columns)
-                {
-                    comboBox.Items.Add(row[column]);
-                   
-                }
-            }
-          
-        }
-
-
-        void UpdateBtn_Click(object sender, EventArgs e)
-        {
-            try
-            {
-               
-                 
-                da.Update(set, "diary");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-            finally
-            {
-            }
-
-
-        }
-
-         SqlCommand InsetCmd()
-        {
-            string sql = @"INSERT into Lessons(Subject,Student,Estimate,[Date]) 
-              VALUES ((select TOP (1) Id from Subjects where Name =@Subject),
-                     (select TOP (1) Id from Students where FirstName =@FirstName AND LastName = @LastName),
-                      @Estimate,@Date)";
-            SqlCommand insetCmd = new SqlCommand(sql, conn);
-
-            insetCmd.Parameters.Add(new SqlParameter("@Estimate", SqlDbType.VarChar));
-            insetCmd.Parameters["@Estimate"].SourceVersion = DataRowVersion.Current;
-            insetCmd.Parameters["@Estimate"].SourceColumn = "Estimate";
-
-            insetCmd.Parameters.Add(new SqlParameter("@FirstName", SqlDbType.VarChar));
-            insetCmd.Parameters["@FirstName"].SourceVersion = DataRowVersion.Current;
-            insetCmd.Parameters["@FirstName"].SourceColumn = "FirstName";
-
-            insetCmd.Parameters.Add(new SqlParameter("@LastName", SqlDbType.VarChar));
-            insetCmd.Parameters["@LastName"].SourceVersion = DataRowVersion.Current;
-            insetCmd.Parameters["@LastName"].SourceColumn = "LastName";
-
-            insetCmd.Parameters.Add(new SqlParameter("@Subject", SqlDbType.VarChar));
-             insetCmd.Parameters["@Subject"].SourceVersion = DataRowVersion.Current;
-            insetCmd.Parameters["@Subject"].SourceColumn = "Subject";
-
-            insetCmd.Parameters.Add(new SqlParameter("@Date", SqlDbType.Date));
-            insetCmd.Parameters["@Date"].SourceVersion = DataRowVersion.Original;
-            insetCmd.Parameters["@Date"].SourceColumn = "Date";
-
-            //вставляем созданный объект SqlCommand в свойство
-            //UpdateCommand SqlDataAdapter
-            return insetCmd;
-        }
-        SqlCommand DeleteCmd()
-        {
-            string sql = @"DELETE Lessons   where Student =(select TOP (1) Id from Students where FirstName =@FirstName AND LastName = @LastName)                                
-               AND Subject = (select TOP (1) Id from Subjects where Name =@Subject) 
-                                              AND  Date   = @Date";
-            SqlCommand deleteCmd = new SqlCommand(sql, conn);
-
-            deleteCmd.Parameters.Add(new SqlParameter("@FirstName", SqlDbType.VarChar));
-            deleteCmd.Parameters["@FirstName"].SourceVersion = DataRowVersion.Original;
-            deleteCmd.Parameters["@FirstName"].SourceColumn = "FirstName";
-
-            deleteCmd.Parameters.Add(new SqlParameter("@LastName", SqlDbType.VarChar));
-            deleteCmd.Parameters["@LastName"].SourceVersion = DataRowVersion.Original;
-            deleteCmd.Parameters["@LastName"].SourceColumn = "LastName";
-
-            deleteCmd.Parameters.Add(new SqlParameter("@Subject", SqlDbType.VarChar));
-            deleteCmd.Parameters["@Subject"].SourceVersion = DataRowVersion.Original;
-            deleteCmd.Parameters["@Subject"].SourceColumn = "Subject";
-
-            deleteCmd.Parameters.Add(new SqlParameter("@Date", SqlDbType.Date));
-            deleteCmd.Parameters["@Date"].SourceVersion = DataRowVersion.Original;
-            deleteCmd.Parameters["@Date"].SourceColumn = "Date";
-
-            //вставляем созданный объект SqlCommand в свойство
-            //UpdateCommand SqlDataAdapter
-            return deleteCmd;
-
-        }
-
-        SqlCommand UpdateCmd()
-        {
-            string sql = @"Update Lessons set Estimate =@pEstimate  where Student =(select TOP (1) Id from Students where FirstName =@FirstName AND LastName = @LastName)                                
-               AND Subject = (select TOP (1) Id from Subjects where Name =@Subject) 
-                                              AND  Date   = @Date";
-            SqlCommand UpdateCmd = new SqlCommand(sql, conn);
-//создаем параметры для запроса Update
-            UpdateCmd.Parameters.Add(new SqlParameter("@pEstimate", SqlDbType.VarChar));
-            UpdateCmd.Parameters["@pEstimate"].SourceVersion =DataRowVersion.Current;
-            UpdateCmd.Parameters["@pEstimate"].SourceColumn = "Estimate";
-
-            UpdateCmd.Parameters.Add(new SqlParameter("@FirstName", SqlDbType.VarChar));
-            UpdateCmd.Parameters["@FirstName"].SourceVersion = DataRowVersion.Original;
-            UpdateCmd.Parameters["@FirstName"].SourceColumn = "FirstName";
-
-            UpdateCmd.Parameters.Add(new SqlParameter("@LastName", SqlDbType.VarChar));
-            UpdateCmd.Parameters["@LastName"].SourceVersion = DataRowVersion.Original;
-            UpdateCmd.Parameters["@LastName"].SourceColumn = "LastName";
-           
-            UpdateCmd.Parameters.Add(new SqlParameter("@Subject", SqlDbType.VarChar));
-            UpdateCmd.Parameters["@Subject"].SourceVersion = DataRowVersion.Original;
-            UpdateCmd.Parameters["@Subject"].SourceColumn = "Subject";
-          
-            UpdateCmd.Parameters.Add(new SqlParameter("@Date", SqlDbType.Date));
-            UpdateCmd.Parameters["@Date"].SourceVersion = DataRowVersion.Original;
-            UpdateCmd.Parameters["@Date"].SourceColumn = "Date";
-                      
-            //вставляем созданный объект SqlCommand в свойство
-            //UpdateCommand SqlDataAdapter
-          return UpdateCmd;
         }
 
        
 
         void Init()
         {
-            ClientSize = new Size(620, 250);
-            StartPosition = FormStartPosition.CenterScreen;
+            
+            this.WindowState = FormWindowState.Normal;
+            this.FormBorderStyle = FormBorderStyle.Sizable;
+            this.Bounds = Screen.PrimaryScreen.Bounds;
+            Font = new Font(Font.Name, fontSize);
+          
+           
+            //  (цвет шрифта, цвет фона, ШРИФт
+           
+          
+            // Create a MenuStrip control with a new window.
+            MenuStrip ms = new MenuStrip();
+            ToolStripMenuItem windowMenu = new ToolStripMenuItem("Файл");
+            ToolStripMenuItem windowOpenMenu = new ToolStripMenuItem("Открыть");
+            windowOpenMenu.Click += (s,e) => {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                    openFileDialog.FilterIndex = 2;
+                    openFileDialog.RestoreDirectory = true;
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        richTextBox1.LoadFile(openFileDialog.FileName, RichTextBoxStreamType.RichText);
+                        Text = openFileDialog.FileName;
+                    }
+                }
 
-         
-            fillBtn = new Button
-            {
-                Location = new Point(10, 35),
-                Text = "Искать"
-            };
-            fillBtn.Click += FillBtn_Click;
 
-            comboBox = new ComboBox
-            {
-                Location = new Point(90, 35)
-            };
-            updateBtn = new Button
-            {
-                Location = new Point(290, 35),
-                Text = "Редоктировать",
-                Width= 100
-            };
-            updateBtn.Hide();
-            updateBtn.Click += UpdateBtn_Click;
-
-            groupBox = new GroupBox
-            {
-                Text= "Авторизация",
-                Location = new Point(400,10),
-                Height = 65
 
             };
-            showRbtn = new RadioButton
-            {
-                Text= "Просмотр",
-                Location = new Point (5,15)
-            };
-            showRbtn.CheckedChanged += (s, e) =>
-             {
-                 Auth = false;
-                 updateBtn.Hide();
-             };
-            editRbtn = new RadioButton
-            {
-                Text = "Правка",
-                 Location = new Point(5, 35)
-            };
-            editRbtn.CheckedChanged += (s, e) =>
-            {
-                Auth = true;
-                updateBtn.Show();
-            };
-            groupBox.Controls.Add(showRbtn);
-            groupBox.Controls.Add(editRbtn);
-            dataGridView1 = new DataGridView
-            {
-                Location = new Point(10, 80),
-                Width = 600
-            };
-     
+            ToolStripMenuItem windowSavenMenu = new ToolStripMenuItem("Сохранить");
+            windowSavenMenu.Click += (s, e) => {
 
-            Controls.AddRange(new Control[] { dataGridView1, fillBtn, updateBtn, groupBox, comboBox});
+                using (SaveFileDialog saveFileDialog1 = new SaveFileDialog())
+                {
 
+                    saveFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+                    saveFileDialog1.FilterIndex = 2;
+                    saveFileDialog1.RestoreDirectory = true;
+
+                    if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                    {
+                        richTextBox1.SaveFile(saveFileDialog1.FileName, RichTextBoxStreamType.RichText);
+                        Text = saveFileDialog1.FileName;
+
+                    }
+                }
+            };
+            windowMenu.DropDownItems.Add(windowOpenMenu);
+            windowMenu.DropDownItems.Add(windowSavenMenu);
+          
+            ToolStripMenuItem SettingsMenu = new ToolStripMenuItem("Настройки");
+
+            ToolStripMenuItem ColorMenu = new ToolStripMenuItem("Цвет");          
+            ToolStripMenuItem ColorBackMenu = new ToolStripMenuItem("Фон");
+            ToolStripMenuItem FontMenu = new ToolStripMenuItem("Шрифт");
+            ToolStripMenuItem SizeMenu = new ToolStripMenuItem("Размер");
+
+            ColorMenu.BackColor = Color.White;
+            ColorBackMenu.BackColor = Color.White;
+            FontMenu.BackColor = Color.White;
+            SizeMenu.BackColor = Color.White;
+            SettingsMenu.DropDownItems.Add(ColorMenu);
+            SettingsMenu.DropDownItems.Add(ColorBackMenu);
+            SettingsMenu.DropDownItems.Add(FontMenu);
+            SettingsMenu.DropDownItems.Add(SizeMenu);
+           
+            ColorList(ColorMenu);
+            ColorBackList(ColorBackMenu);
+            FontList(FontMenu);
+             SizeList(SizeMenu);
+            // Add the window ToolStripMenuItem to the MenuStrip.
+            ms.Items.Add(windowMenu);
+            ms.Items.Add(SettingsMenu);
+            // Dock the MenuStrip to the top of the form.
+            ms.Dock = DockStyle.Top;
+
+            // The Form.MainMenuStrip property determines the merge target.
+            this.MainMenuStrip = ms;
+            richTextBox1 = new RichTextBox {
+                Height = this.Height -100,
+                Width = this.Width-20,
+             Location  = new Point(5,60)
+            
+            };
+
+            Resize += (s,e) => {
+                richTextBox1.Height = this.Height - 100;
+                richTextBox1.Width = this.Width - 20;
+            
+            };
+
+
+            this.Controls.AddRange(new Control[] { ms, richTextBox1 });
+           
         }
 
+      private  void ColorList(ToolStripMenuItem menu)
+        {
+            foreach (Color color in new ColorConverter().GetStandardValues())
+            {
+                   var tsmItem = new  ToolStripMenuItem
+                   {
+                       BackColor = Color.FromArgb(color.A, color.R, color.G, color.B),
+                       ForeColor = Color.FromArgb(color.A, (byte)~color.R, (byte)~color.G, (byte)~color.B),
+                       Text = $"{color.Name}"
+
+                   };
+                tsmItem.Click += (s, e) =>
+                {
+                    richTextBox1.SelectionColor = Color.FromArgb(color.A, color.R, color.G, color.B);
+                };
+                    menu.DropDownItems.Add(tsmItem);
+                                     
+                }
+        }
+        private void ColorBackList(ToolStripMenuItem menu)
+        {
+            foreach (Color color in new ColorConverter().GetStandardValues())
+            {
+                var tsmItem = new ToolStripMenuItem
+                {
+                    BackColor = Color.FromArgb(color.A, color.R, color.G, color.B),
+                    ForeColor = Color.FromArgb(color.A, (byte)~color.R, (byte)~color.G, (byte)~color.B),
+                    Text = $"{color.Name}"
+
+                };
+                tsmItem.Click += (s, e) =>
+                {
+                    richTextBox1.SelectionBackColor = Color.FromArgb(color.A, color.R, color.G, color.B);
+                };
+                menu.DropDownItems.Add(tsmItem);
+
+            }
+        }
+        private void SizeList(ToolStripMenuItem menu)
+        {
+            for (int i = 5; i < 75; i+=2)
+            {
+
+           
+                var tsmItem = new ToolStripMenuItem
+                {
+                    BackColor = Color.White,                   
+                    Text = $"{i}"
+
+                };
+                tsmItem.Click += (s, e) =>
+                {
+                   fontSize = float.Parse( tsmItem.Text);
+                    richTextBox1.SelectionFont = new Font(Font.Name, fontSize, FontStyle.Regular);
+                };
+                menu.DropDownItems.Add(tsmItem);
+
+            }
+        }
+        private void FontList(ToolStripMenuItem menu)
+        {
+
+         
+            foreach (var font in new InstalledFontCollection().Families)
+            {
+                FontFamily fontFamily = new FontFamily(font.Name);
+                var tsmItem = new ToolStripMenuItem
+                {
+                    BackColor = Color.White,
+                    Font = new Font(fontFamily, 12, FontStyle.Regular, GraphicsUnit.Point),
+                    Text = font.Name
+                };
+                tsmItem.Click += (s, e) =>
+                {  
+                    richTextBox1.SelectionFont= new Font(font.Name, Font.Size, FontStyle.Regular);
+                 
+                };
+                menu.DropDownItems.Add(tsmItem);
+
+            }
+        }
     }
 }
