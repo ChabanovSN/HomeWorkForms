@@ -9,7 +9,8 @@ using System.Data.SqlClient;
 using System.Data;
 using System.Configuration;
 using System.Drawing.Text;
-
+using System.Data.Common;
+using MySql.Data.MySqlClient;
 namespace HomeWorkForms
 {
 
@@ -19,204 +20,146 @@ namespace HomeWorkForms
         [STAThread]
         public static void Main()
         {
-          
+
             Application.Run(new Form2());
         }
 
     }
     public class Form2 : Form
     {
-        RichTextBox richTextBox1;
-        float fontSize = 12;
+        DbConnection conn = null;
+        DbProviderFactory fact = null;
+        DbDataAdapter adapter = null;
+        DataTable table = null;
+        DataGridView dataGridView1;
+        ComboBox comboBox1;
+        string SQL = "select * from Saler";
         public Form2()
         {
-            //  FontDialog dialog = new FontDialog();
-            //  if (dialog.ShowDialog() != DialogResult.Cancel) { }
-
+           
+       
             Init();
         }
 
-       
+        void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+            foreach (ConnectionStringSettings cs in ConfigurationManager.ConnectionStrings)
+            {
+                
+
+                if (cs.Name.StartsWith("sales") && cs.ProviderName == comboBox1.SelectedItem.ToString())
+                {
+                    fact = DbProviderFactories.GetFactory(cs.ProviderName);
+
+               
+                    conn = fact.CreateConnection();                  
+                  
+                    conn.ConnectionString = cs.ConnectionString;
+                    adapter = fact.CreateDataAdapter();
+                    adapter.SelectCommand = conn.CreateCommand();
+
+                    adapter.SelectCommand.CommandText = SQL;
+                    table = new DataTable();
+                    adapter.Fill(table);
+                    // выводим результаты запроса
+                    dataGridView1.DataSource = null;
+                    dataGridView1.DataSource = table;
+
+                    //    Console.WriteLine(cs.ProviderName);
+                    break;
+                }
+
+            }
+
+
+        }
 
         void Init()
         {
+
+            ClientSize = new Size(700, 400);
+            StartPosition = FormStartPosition.CenterScreen;
+           
+
+
+            comboBox1 = new ComboBox
+            {
+                Location = new Point(5, 5),
+                Width = 200
+            };
+            dataGridView1 = new DataGridView
+            {
+                Location = new Point(5, 55),
+                Width = 500
+            };
+            comboBox1.SelectedIndexChanged += ComboBox1_SelectedIndexChanged;
+
+            GroupBox groupBox = new GroupBox
+            {
+                Text = "Запрос",
+                Location = new Point(520, 25),
+                Width =120
+            };
+            RadioButton radioS = new RadioButton
+            {
+                Text = "Продовец",
+                Location = new Point(5, 25)
+            };
+            radioS.CheckedChanged += (s, e) => {
+                SQL = "select * from Saler";
+                ComboBox1_SelectedIndexChanged(null, null);
+            };
+            RadioButton radioB = new RadioButton
+            { Checked = true,
+                Text = "Покупатель",
+                Location = new Point(5, 50)
+            };
+
+            radioB.CheckedChanged += (s, e) => {
+                SQL = "select * from Buyer";
+                ComboBox1_SelectedIndexChanged(null, null);
+            };
+            RadioButton radioSale = new RadioButton
+            {
+                Text = "Продажи",
+                Location = new Point(5, 75)
+            };
+            radioSale.CheckedChanged += (s, e) => {
+                SQL = @"select b.FirstName, b.LastName, s.FirstName, s.LastName, dil.summa , dil.dateDiler
+                 from Saler as s
+     join Sale as dil on dil.id_saler = s.Id
+     join Buyer as b  on dil.id_buyer = b.Id;";
+                ComboBox1_SelectedIndexChanged(null, null);
+            };
+            groupBox.Controls.AddRange(new Control[] { radioB, radioS, radioSale});
+            Controls.AddRange(new Control[] { comboBox1, dataGridView1, groupBox });
+            try
+            {
+               
+             
+                  DataTable t = DbProviderFactories.GetFactoryClasses();             
+                 comboBox1.Items.Clear();
+             
+
             
-            this.WindowState = FormWindowState.Normal;
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.Bounds = Screen.PrimaryScreen.Bounds;
-            Font = new Font(Font.Name, fontSize);
-          
-           
-            //  (цвет шрифта, цвет фона, ШРИФт
-           
-          
-            // Create a MenuStrip control with a new window.
-            MenuStrip ms = new MenuStrip();
-            ToolStripMenuItem windowMenu = new ToolStripMenuItem("Файл");
-            ToolStripMenuItem windowOpenMenu = new ToolStripMenuItem("Открыть");
-            windowOpenMenu.Click += (s,e) => {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                foreach (DataRow dr in t.Rows)
                 {
-                    openFileDialog.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                    openFileDialog.FilterIndex = 2;
-                    openFileDialog.RestoreDirectory = true;
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        richTextBox1.LoadFile(openFileDialog.FileName, RichTextBoxStreamType.RichText);
-                        Text = openFileDialog.FileName;
-                    }
+                    comboBox1.Items.Add(dr["InvariantName"]);
                 }
 
 
 
-            };
-            ToolStripMenuItem windowSavenMenu = new ToolStripMenuItem("Сохранить");
-            windowSavenMenu.Click += (s, e) => {
-
-                using (SaveFileDialog saveFileDialog1 = new SaveFileDialog())
-                {
-
-                    saveFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
-                    saveFileDialog1.FilterIndex = 2;
-                    saveFileDialog1.RestoreDirectory = true;
-
-                    if (saveFileDialog1.ShowDialog() == DialogResult.OK)
-                    {
-                        richTextBox1.SaveFile(saveFileDialog1.FileName, RichTextBoxStreamType.RichText);
-                        Text = saveFileDialog1.FileName;
-
-                    }
-                }
-            };
-            windowMenu.DropDownItems.Add(windowOpenMenu);
-            windowMenu.DropDownItems.Add(windowSavenMenu);
-          
-            ToolStripMenuItem SettingsMenu = new ToolStripMenuItem("Настройки");
-
-            ToolStripMenuItem ColorMenu = new ToolStripMenuItem("Цвет");          
-            ToolStripMenuItem ColorBackMenu = new ToolStripMenuItem("Фон");
-            ToolStripMenuItem FontMenu = new ToolStripMenuItem("Шрифт");
-            ToolStripMenuItem SizeMenu = new ToolStripMenuItem("Размер");
-
-            ColorMenu.BackColor = Color.White;
-            ColorBackMenu.BackColor = Color.White;
-            FontMenu.BackColor = Color.White;
-            SizeMenu.BackColor = Color.White;
-            SettingsMenu.DropDownItems.Add(ColorMenu);
-            SettingsMenu.DropDownItems.Add(ColorBackMenu);
-            SettingsMenu.DropDownItems.Add(FontMenu);
-            SettingsMenu.DropDownItems.Add(SizeMenu);
-           
-            ColorList(ColorMenu);
-            ColorBackList(ColorBackMenu);
-            FontList(FontMenu);
-             SizeList(SizeMenu);
-            // Add the window ToolStripMenuItem to the MenuStrip.
-            ms.Items.Add(windowMenu);
-            ms.Items.Add(SettingsMenu);
-            // Dock the MenuStrip to the top of the form.
-            ms.Dock = DockStyle.Top;
-
-            // The Form.MainMenuStrip property determines the merge target.
-            this.MainMenuStrip = ms;
-            richTextBox1 = new RichTextBox {
-                Height = this.Height -100,
-                Width = this.Width-20,
-             Location  = new Point(5,60)
-            
-            };
-
-            Resize += (s,e) => {
-                richTextBox1.Height = this.Height - 100;
-                richTextBox1.Width = this.Width - 20;
-            
-            };
-
-
-            this.Controls.AddRange(new Control[] { ms, richTextBox1 });
-           
-        }
-
-      private  void ColorList(ToolStripMenuItem menu)
-        {
-            foreach (Color color in new ColorConverter().GetStandardValues())
-            {
-                   var tsmItem = new  ToolStripMenuItem
-                   {
-                       BackColor = Color.FromArgb(color.A, color.R, color.G, color.B),
-                       ForeColor = Color.FromArgb(color.A, (byte)~color.R, (byte)~color.G, (byte)~color.B),
-                       Text = $"{color.Name}"
-
-                   };
-                tsmItem.Click += (s, e) =>
-                {
-                    richTextBox1.SelectionColor = Color.FromArgb(color.A, color.R, color.G, color.B);
-                };
-                    menu.DropDownItems.Add(tsmItem);
-                                     
-                }
-        }
-        private void ColorBackList(ToolStripMenuItem menu)
-        {
-            foreach (Color color in new ColorConverter().GetStandardValues())
-            {
-                var tsmItem = new ToolStripMenuItem
-                {
-                    BackColor = Color.FromArgb(color.A, color.R, color.G, color.B),
-                    ForeColor = Color.FromArgb(color.A, (byte)~color.R, (byte)~color.G, (byte)~color.B),
-                    Text = $"{color.Name}"
-
-                };
-                tsmItem.Click += (s, e) =>
-                {
-                    richTextBox1.SelectionBackColor = Color.FromArgb(color.A, color.R, color.G, color.B);
-                };
-                menu.DropDownItems.Add(tsmItem);
 
             }
-        }
-        private void SizeList(ToolStripMenuItem menu)
-        {
-            for (int i = 5; i < 75; i+=2)
+            catch (Exception e)
             {
-
-           
-                var tsmItem = new ToolStripMenuItem
-                {
-                    BackColor = Color.White,                   
-                    Text = $"{i}"
-
-                };
-                tsmItem.Click += (s, e) =>
-                {
-                   fontSize = float.Parse( tsmItem.Text);
-                    richTextBox1.SelectionFont = new Font(Font.Name, fontSize, FontStyle.Regular);
-                };
-                menu.DropDownItems.Add(tsmItem);
-
+                Console.WriteLine(e.Message);
             }
-        }
-        private void FontList(ToolStripMenuItem menu)
-        {
 
-         
-            foreach (var font in new InstalledFontCollection().Families)
-            {
-                FontFamily fontFamily = new FontFamily(font.Name);
-                var tsmItem = new ToolStripMenuItem
-                {
-                    BackColor = Color.White,
-                    Font = new Font(fontFamily, 12, FontStyle.Regular, GraphicsUnit.Point),
-                    Text = font.Name
-                };
-                tsmItem.Click += (s, e) =>
-                {  
-                    richTextBox1.SelectionFont= new Font(font.Name, Font.Size, FontStyle.Regular);
-                 
-                };
-                menu.DropDownItems.Add(tsmItem);
 
-            }
+
         }
+
     }
 }
